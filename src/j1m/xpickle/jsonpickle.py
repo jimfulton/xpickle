@@ -8,13 +8,13 @@ from . import base
 class Persistent(object):
 
     def __init__(self, id):
-        if isinstance(id, str):
-            id = binascii.b2a_hex(id)
+        if isinstance(id, (str, Bytes)):
+            id = binascii.b2a_hex(str(id))
         else:
             assert (len(id) == 2 and
-                    isinstance(id[0], str) and
+                    isinstance(id[0], (Bytes, str)) and
                     isinstance(id[1], Global))
-            id = binascii.b2a_hex(id[0]), id[1].name
+            id = binascii.b2a_hex(str(id[0])), id[1].name
         self.id = id
 
     def json_reduce(self):
@@ -96,6 +96,9 @@ class Put(Get):
         k = unicode(k)
         self.v[k] = v
 
+    def append(self, i):
+        self.v.append(i)
+
     def json_reduce(self):
         v = self.v
         if self.got:
@@ -163,5 +166,5 @@ class JsonUnpickler(base.XUnpickler):
         return json.dumps(data, default=default)
 
 def record(pickle):
-    unpickler = JsonUnpickler(StringIO(p))
+    unpickler = JsonUnpickler(StringIO(pickle))
     return unpickler.load(), unpickler.load()

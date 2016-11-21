@@ -51,13 +51,6 @@ class XUnpickler(Unpickler):
     def load_int(self):
         s = self.readline()[:-1]
         i = int(s)
-        if s[0] == "0":
-            if i == 1:
-                self.append(true)
-                return
-            elif i == 0 and s != "0": # s == "00"
-                self.append(false)
-                return
         self.append(self._x_Int(i))
     dispatch[INT] = load_int
 
@@ -70,7 +63,7 @@ class XUnpickler(Unpickler):
     dispatch[BININT1] = load_binint1
 
     def load_binint2(self):
-        self.append(Int(load_int(self.read(2) + '\000\000')))
+        self.append(self._x_Int(load_int(self.read(2) + '\000\000')))
     dispatch[BININT2] = load_binint2
 
     def load_long(self):
