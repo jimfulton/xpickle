@@ -8,6 +8,9 @@ from . import base
 class Persistent(object):
 
     def __init__(self, id):
+        if isinstance(id, Get):
+            id = id.v
+
         if isinstance(id, (str, Bytes)):
             id = binascii.b2a_hex(str(id))
         else:
