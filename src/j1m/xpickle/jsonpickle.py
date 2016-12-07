@@ -1,9 +1,16 @@
 import binascii
 import json
 import datetime
+from struct import unpack
+import zlib
 from cStringIO import StringIO
 
 from . import base
+
+def u64(v):
+    """Unpack an 8-byte string into a 64-bit long integer."""
+    return unpack(">Q", str(v))[0]
+
 
 class Persistent(object):
 
@@ -12,12 +19,12 @@ class Persistent(object):
             id = id.v
 
         if isinstance(id, (str, Bytes)):
-            id = binascii.b2a_hex(str(id))
+            id = u64(id)
         else:
             assert (len(id) == 2 and
                     isinstance(id[0], (Bytes, str)) and
                     isinstance(id[1], Global))
-            id = binascii.b2a_hex(str(id[0])), id[1].name
+            id = u64(id[0]), id[1].name
         self.id = id
 
     def json_reduce(self):
@@ -36,7 +43,11 @@ class Instance(object):
     id = None
 
     def __init__(self, global_, args):
-        self.class_name = global_.name
+        if isinstance(global_, Global):
+            self.class_name = global_.name
+        else:
+            self.class_name = global_
+
         self.args = args
 
     def __setstate__(self, state):
@@ -83,6 +94,7 @@ class Get(object):
         return unicode(self.v)
 
     def json_reduce(self):
+        return self.v
         return {'::': 'ref', 'id': self.id}
 
 class Put(Get):
@@ -104,6 +116,7 @@ class Put(Get):
 
     def json_reduce(self):
         v = self.v
+        return v # XXX hack
         if self.got:
             if isinstance(v, Instance):
                 v.id = self.id
